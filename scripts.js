@@ -22,11 +22,11 @@ request({url: 'http://192.241.185.49/', method: 'GET'}, (err, res) => {
   console.log('Running')
   if (err) return console.log(err)
   else {
-    var data = JSON.parse(res)
+    console.log(res)
     // var topTenArray = []
 
-    data.sort(function (a, b) { return b - a })
-    console.log(data)
+    // arrayData.sort(function (a, b) { return b - a })
+    // console.log(arrayData)
     var data = {
       labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
       datasets: [
