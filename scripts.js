@@ -19,6 +19,7 @@ function request (opts, callback) {
 }
 
 request({url: 'http://192.241.185.49/', method: 'GET'}, (err, res) => {
+  console.log('Running')
   if (err) return console.log(err)
   else {
     var data = JSON.parse(res)
