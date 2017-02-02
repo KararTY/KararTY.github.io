@@ -18,7 +18,7 @@ function request (opts, callback) {
   return xhr
 }
 
-request({url: 'http://192.241.185.49/', method: 'GET'}, (err, res) => {
+(request({url: 'http://192.241.185.49/', method: 'GET'}, (err, res) => {
   console.log('Running')
   if (err) return console.log(err)
   else {
@@ -68,4 +68,4 @@ request({url: 'http://192.241.185.49/', method: 'GET'}, (err, res) => {
       }
     })
   }
-})
+}))
