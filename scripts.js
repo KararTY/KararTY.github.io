@@ -32,5 +32,14 @@ var data = {
 var myBarChart = new Chart(ctx, {
   type: 'horizontalBar',
   data: data,
-  options: options
+  options: {
+    scales: {
+      xAxes: [{
+        stacked: true
+      }],
+      yAxes: [{
+        stacked: true
+      }]
+    }
+  }
 })
