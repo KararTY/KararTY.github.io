@@ -5,7 +5,7 @@ function request (opts, callback) {
   xhr.onreadystatechange = function () {
     if (xhr.readyState !== 4) return
     if (xhr.status >= 200 && xhr.status < 400) {
-      return callback(null, xhr.getResponseHeader('Content-Type') != null && xhr.getResponseHeader('Content-Type').indexOf('application/json') != -1 ? JSON.parse(xhr.responseText) : xhr.responseText, xhr)
+      return callback(null, xhr.getResponseHeader('Content-Type') !== null && xhr.getResponseHeader('Content-Type').indexOf('application/json') !== -1 ? JSON.parse(xhr.responseText) : xhr.responseText, xhr)
     }
     var msg = xhr.responseText || "Can't access"
     callback(Error(msg), null, xhr)
@@ -18,7 +18,7 @@ function request (opts, callback) {
   return xhr
 }
 
-(request({url: 'http://192.241.185.49/', method: 'GET'}, (err, res) => {
+request({url: 'http://192.241.185.49/', method: 'GET'}, (err, res) => {
   console.log('Running')
   if (err) return console.log(err)
   else {
@@ -68,4 +68,4 @@ function request (opts, callback) {
       }
     })
   }
-}))
+})
