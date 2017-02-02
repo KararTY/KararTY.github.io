@@ -40,7 +40,7 @@ request({ url: 'http://192.241.185.49/', method: 'GET' }, (err, res) => {
     res = sortProperties(res)
     console.log(res)
     var data = {
-      labels: [res[0], res[1], res[2], res[3], res[4], res[5], res[6], res[7], res[8], res[9]],
+      labels: [res[0][0], res[1][0], res[2][0], res[3][0], res[4][0], res[5][0], res[6][0], res[7][0], res[8][0], res[9][0]],
       datasets: [
         {
           label: '"Noun"',
@@ -61,7 +61,7 @@ request({ url: 'http://192.241.185.49/', method: 'GET' }, (err, res) => {
             'rgba(255, 159, 64, 1)'
           ],
           borderWidth: 1,
-          data: [1, 2, 3, 4, 5, 6, 7, 9, 10]
+          data: [res[0][1], res[1][1], res[2][1], res[3][1], res[4][1], res[5][1], res[6][1], res[7][1], res[8][1], res[9][1]]
         }
       ]
     }
