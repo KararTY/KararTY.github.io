@@ -1,23 +1,59 @@
 <!doctype html>
 
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
 
-  <title>KekBot - Tracking citizens of Kekistan</title>
-  <meta name="description" content="Kekistani discord tracking">
+  <title>KekBot - Shadilay!</title>
+  <meta name="description" content="Tracking the Kekistani citizens, for fun.">
   <meta name="author" content="KararTY">
 
-  <!-- <link rel="stylesheet" href="css/styles.css?v=1.0"> -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.3.1/css/bulma.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
 
   <!--[if lt IE 9]>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
   <![endif]-->
+  <style>
+    canvas {
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+  </style>
 </head>
 
 <body>
-<h1>Praise Kek!</h1>
-<h3>Work in progress! Still doing charts!</h3>
-  <!-- <script src="js/scripts.js"></script> -->
+  <section class="section has-text-centered">
+    <div class="heading">
+      <h1>KekBot</h1>
+    </div>
+    <div class="content is-small">
+      <div style="width:75%">
+        <canvas id="canvas"></canvas>
+      </div>
+    </div>
+  </section>
+    <footer class="footer">
+    <div class="container">
+      <div class="content has-text-centered">
+        <p>
+          <strong>KekBot</strong> by Karar Al-Remahy (Yes, I'm kebab). Built with love using Open Source projects.
+        </p>
+        <p>
+          <a class="icon" target="_blank" href="https://twitter.com/karar_alr">
+            <i class="fa fa-twitter"></i>
+          </a>
+        </p>
+      </div>
+    </div>
+  </footer>
 </body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.min.js"></script>
+<script src="/scripts.js"></script>
+
+
 </html>
