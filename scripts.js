@@ -17,18 +17,30 @@ function request (opts, callback) {
   xhr.send(opts.data)
   return xhr
 }
-
-request({url: 'http://192.241.185.49/', method: 'GET'}, (err, res) => {
+function sortProperties (obj) {
+  // convert object into array
+  var sortable = []
+  for (var key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      sortable.push([key, obj[key]]) // each item is an array in format [key, value]
+    }
+  }
+  // sort items by value
+  sortable.sort(function (a, b) {
+    return b[1] - a[1] // compare numbers
+  })
+  return sortable // array in format [ [ key1, val1 ], [ key2, val2 ], ... ]
+}
+request({ url: 'http://192.241.185.49/', method: 'GET' }, (err, res) => {
   console.log('Running')
   if (err) return console.log(err)
   else {
     // console.log(res)
     // var topTenArray = []
-
-    res.sort(function (a, b) { return b - a })
+    res = sortProperties(res)
     console.log(res)
     var data = {
-      labels: [res[0], res[0], res[0], res[0], res[0], res[0], res[0]],
+      labels: [res[0], res[1], res[2], res[3], res[4], res[5], res[6], res[7], res[8], res[9]],
       datasets: [
         {
           label: '"Noun"',
