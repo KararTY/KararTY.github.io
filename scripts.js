@@ -1,5 +1,3 @@
-var Chart = window.chart
-
 var ctx = document.getElementById('canvas')
 
 var data = {
