@@ -44,7 +44,7 @@ request({ url: 'http://192.241.185.49/', method: 'GET' }, (err, res) => {
     var arr = []
     arr.push(Math.floor(Math.random() * (maximum - minimum + 1)) + minimum)
     document.getElementById('randNoun').innerText = res[arr[0]][0]
-    document.getElementById('randNounMentioned').innerText = res[arr[0]]
+    document.getElementById('randNounMentioned').innerText = res[arr[0]][1]
     console.log(arr)
     var data = {
       labels: [res[0][0], res[1][0], res[2][0], res[3][0], res[4][0], res[5][0], res[6][0], res[7][0], res[8][0], res[9][0]],
