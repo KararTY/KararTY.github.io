@@ -39,6 +39,10 @@ request({ url: 'http://192.241.185.49/', method: 'GET' }, (err, res) => {
     // var topTenArray = []
     res = sortProperties(res)
     console.log(res)
+    var maximum = res.length
+    var minimum = 0
+    var randomnumber = Math.floor(Math.random() * (maximum - minimum + 1)) + minimum
+    document.getElementById('randNoun').innerText = res[randomnumber][0]
     var data = {
       labels: [res[0][0], res[1][0], res[2][0], res[3][0], res[4][0], res[5][0], res[6][0], res[7][0], res[8][0], res[9][0]],
       datasets: [
@@ -47,18 +51,12 @@ request({ url: 'http://192.241.185.49/', method: 'GET' }, (err, res) => {
           backgroundColor: [
             'rgba(255, 99, 132, 0.2)',
             'rgba(54, 162, 235, 0.2)',
-            'rgba(255, 206, 86, 0.2)',
-            'rgba(75, 192, 192, 0.2)',
-            'rgba(153, 102, 255, 0.2)',
-            'rgba(255, 159, 64, 0.2)'
+            'rgba(255, 206, 86, 0.2)'
           ],
           borderColor: [
             'rgba(255,99,132,1)',
             'rgba(54, 162, 235, 1)',
-            'rgba(255, 206, 86, 1)',
-            'rgba(75, 192, 192, 1)',
-            'rgba(153, 102, 255, 1)',
-            'rgba(255, 159, 64, 1)'
+            'rgba(255, 206, 86, 1)'
           ],
           borderWidth: 1,
           data: [res[0][1], res[1][1], res[2][1], res[3][1], res[4][1], res[5][1], res[6][1], res[7][1], res[8][1], res[9][1]]
