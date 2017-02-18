@@ -1,54 +1,41 @@
-<!doctype html>
-
+<!DOCTYPE HTML>
 <html lang="en">
 
 <head>
   <meta charset="utf-8">
 
-  <title>#PewdieGate</title>
-  <meta name="description" content="#PewDieGate, how the media lies by omission. Find all archived news articles related to #PewDieGate in one website.">
-  <meta name="author" content="Citizens of Kekistan">
+  <title>#PewDieGate</title>
+  <meta name="description" content="#PewDieGate, how the media lies by omission. Find all archived news articles related to #PewDieGate in one website." />
+  <meta name="author" content="Citizens of Kekistan" />
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:site" content="@karar_alr" />
   <meta name="twitter:title" content="#PewDieGate" />
-  <meta name="twitter:description" content="PewDiePieGate, how the media lies by omission. Find all archived news articles related to PewDiePieGate in one website."
-  />
+  <meta name="twitter:description" content="PewDiePieGate, how the media lies by omission. Find all archived news articles related to PewDiePieGate in one website." />
+  <!-- <meta name="twitter:image" content="https://" /> -->
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.3.1/css/bulma.min.css">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.3.1/css/bulma.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" />
 
   <!--[if lt IE 9]>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
   <![endif]-->
-  <style>
-    canvas {
-      -moz-user-select: none;
-      -webkit-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
-    }
-  </style>
 </head>
 
 <body>
   <nav class="has-text-centered">
     <div class="heading">
-      <h1 class="title">#PewdieGate</h1>
+      <h1 class="title">#PewDieGate</h1>
       <h2 class="subtitle">A list of archived news articles about PewDiePie, regarding #PewDieGate.</h2>
     </div>
   </nav>
   <section class="section">
     <div class="columns">
-      <div class="column">
-        <div class="box is-half">
+      <div class="column is-one-quarter">
+        <div class="box">
           <a class="twitter-timeline" href="https://twitter.com/hashtag/PewDieGate" data-widget-id="832619711674273796">#PewDieGate Tweets</a>
-          <script>
-            !function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + "://platform.twitter.com/widgets.js"; fjs.parentNode.insertBefore(js, fjs); } } (document, "script", "twitter-wjs");
-          </script>
         </div>
       </div>
-      <div class="column">
+      <div class="column is-three-quarters">
         <div class="box">
           <table class="table is-striped">
             <thead>
@@ -56,29 +43,28 @@
                 <th><abbr title="Link">Link</abbr></th>
                 <th><abbr title="Title">Title</abbr></th>
                 <th><abbr title="Date">Date</abbr></th>
-                <th><abbr title="Publication">Pbl</abbr></th>
-                <th><abbr title="Author">Author</abbr></th>
+                <th><abbr title="Publication">Publication</abbr></th>
+                <th><abbr title="Author(s)">Author(s)</abbr></th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-              <td><a href="http://archive.is/eFWqs">Archive</a></td>
-              <td>Disney Severs Ties With YouTube Star...</td>
-              <td>Feb 13, 2017</td>
-              <td>Wall Street Journal</td>
-              <td>Rolfe Winkler, Jack Nicas, Ben Fritz</td>
-              </tr>
+            <tbody id="tbody">
             </tbody>
           </table>
         </div>
       </div>
+    </div>
+    <div class="box content">
+      <h3>What is this?</h3>
+      <p>A list of articles related to #PewDieGate.</p>
+      <h3>What is #PewDieGate?</h3>
+      <p>(On my todo list.)</p>
     </div>
   </section>
   <footer class="footer">
     <div class="container">
       <div class="content has-text-centered">
         <p>
-          By the citizens of Kekistan. Built with love using Open Source projects.
+          Made in Kekistan, by the citizens of Kekistan. Built using Open Source projects.
           <br/>Want to contribute? Check out the github project <a target="_blank" href="https://github.com/KararTY/KararTY.github.io">here</a>.
         </p>
         <p>
@@ -90,8 +76,20 @@
     </div>
   </footer>
 </body>
-<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.min.js"></script>
-<script src="/scripts.js"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.min.js"></script>
+<script src="./pewdiegate.js"></script>
+<script>
+  !function (d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'
+    if (!d.getElementById(id)) {
+      js = d.createElement(s)
+      js.id = id
+      js.src = p + "://platform.twitter.com/widgets.js"
+      fjs.parentNode.insertBefore(js, fjs)
+    }
+  } (document, "script", "twitter-wjs")
 
+</script>
 
 </html>
