@@ -33,30 +33,41 @@
 <body>
   <section class="section has-text-centered">
     <div class="heading">
-      <h1 class="title">KekBot</h1>
-      <h2 class="subtitle">Work in progress!</h2>
+      <h1 class="title">KekBot<sup>0.2</sup></h1>
+      <h2 class="subtitle">Still getting worked on!</h2>
     </div>
     <div class="content">
       <div>
+        <noscript><h3>Hey pal, do you mind enabling JavaScript?</h3></noscript>
         <canvas id="canvas"></canvas>
       </div>
       <h3>Random word: <strong id="randNoun">Loading...</strong></h3>
       <h4>Mentioned: <strong id="randNounMentioned">0</strong></h4>
-      <h2>What is this?</h2>
-      <p>Tracking every noun mentioned on the Discord channel. Will be used as a dataset for a Twitter Bot.</p>
-      <h2>How does this work?</h2>
-      <p>A Natural Language Processor is looking through every message sent on the discord channel and for moderation purposes a couple of words have been blacklisted.</p>
     </div>
   </section>
-    <footer class="footer">
+  <section class="section">
+    <div class="box">
+      <div class="content">
+      <h3>What is this?</h2>
+      <p>Tracking every noun mentioned on the Discord channel. Will be used as a <i>dataset</i> for a <strong>Twitter Bot</strong>.</p>
+      <h3>How does this work?</h2>
+      <p>A Natural Language Processor is looking through every message sent on the discord channel and for moderation purposes
+      a couple of words have been blacklisted.</p>
+      </div>
+    </div>
+  </section>
+  <footer class="footer">
     <div class="container">
       <div class="content has-text-centered">
         <p>
-          <strong>KekBot</strong> by Karar Al-Remahy (Yes, I'm kebab). Built with love using Open Source projects.
+          <strong>Kek</strong>istani <strong>Me</strong>me <strong>Me</strong>dia by Karar Al-Remahy. Built with love using Open Source projects.
         </p>
         <p>
           <a class="icon" target="_blank" href="https://twitter.com/karar_alr">
             <i class="fa fa-twitter"></i>
+          </a>
+          <a class="icon" target="_blank" href="https://github.com/KararTY/KararTY.github.io">
+            <i class="fa fa-github"></i>
           </a>
         </p>
       </div>
@@ -64,7 +75,7 @@
   </footer>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.min.js"></script>
-<script src="/scripts.js"></script>
+<script src="./index.js"></script>
 
 
 </html>
