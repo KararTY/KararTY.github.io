@@ -35,5 +35,5 @@ const timedRequest = () => {
     }
   })
 }
-
+timedRequest()
 setInterval(timedRequest, 3000)
