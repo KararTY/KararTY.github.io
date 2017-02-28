@@ -21,15 +21,19 @@ function request (opts, callback) {
 
 var chanBody = document.getElementById('comments')
 
-request({ url: 'http://192.241.185.49/test', method: 'GET' }, (err, res) => {
-  // console.log('Running')
-  if (err) return console.log(err)
-  else {
-    let data = res
-    for (let i = 1; i < 22; i++) {
-      let element = data[data.length - i]
-
-      chanBody.innerHTML += `<div class="box chanReply"><strong>Anonymous</strong> No.<b>${(data.length - i)}</b><blockquote class="chanMessage">${element}</blockquote></div>`
+const timedRequest = () => {
+  request({ url: 'http://192.241.185.49/test', method: 'GET' }, (err, res) => {
+    // console.log('Running')
+    if (err) return console.log(err)
+    else {
+      let data = res
+      chanBody.innerHTML = ''
+      for (let i = 1; i < 22; i++) {
+        let element = data[data.length - i]
+        chanBody.innerHTML += `<div class="box chanReply"><strong>Anonymous</strong> No.<b>${(data.length - i)}</b><blockquote class="chanMessage">${element}</blockquote></div>`
+      }
     }
-  }
-})
+  })
+}
+
+setInterval(timedRequest, 3000)
