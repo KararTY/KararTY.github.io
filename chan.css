@@ -12,6 +12,10 @@ div.chanReply {
     padding: 2px;
 }
 
+.implying {
+  color: #789922 !important;
+}
+
 blockquote.chanMessage {
   display: block;
   background-color: #f0e0d6;
