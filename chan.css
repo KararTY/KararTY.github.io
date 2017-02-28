@@ -1,4 +1,4 @@
-html, div.section, section.section, nav {
+html, div.section, section.section#comments, nav {
   background: #ffe url(./image/fade.png) top center repeat-x;
   color: maroon !important;
 }

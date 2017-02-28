@@ -28,7 +28,7 @@ const timedRequest = () => {
     else {
       let data = res
       chanBody.innerHTML = ''
-      for (let i = 1; i < 22; i++) {
+      for (let i = 1; i < 44; i++) {
         let element = data[data.length - i]
         chanBody.innerHTML += `<div class="box chanReply"><strong>Anonymous</strong> No.<b>${(data.length - i)}</b><blockquote class="chanMessage">${element}</blockquote></div>`
       }
