@@ -84,3 +84,9 @@ section.hero .subtitle {
 .input:active, .input:focus {
   border-color: goldenrod;
 }
+.button.is-info.is-hovered, .button.is-info:hover {
+  color: goldenrod
+}
+.button.is-info:active {
+  color: rgb(30, 30, 30);
+}
