@@ -102,3 +102,15 @@ section.hero .hero-body img {
 .button.is-info:active {
   color: rgb(30, 30, 30);
 }
+.videoWrapper .icon.is-large {
+  height: 6rem;
+  width: 6rem;
+}
+.videoWrapper .icon.is-large .fa {
+  font-size: 6rem;
+}
+.loader {
+  border: none;
+  color: goldenrod;
+  animation: spinAround 1.5s infinite ease-in-out;
+}
