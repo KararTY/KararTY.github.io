@@ -2,7 +2,7 @@
 
 var tbody = document.getElementById('tbody')
 
-window.addEventListener('onload', (window) => {
+window.addEventListener('load', (window) => {
   var res = {
     'data': [
       {
