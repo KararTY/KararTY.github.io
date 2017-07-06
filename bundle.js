@@ -311,7 +311,6 @@ var YSNG =
 	        "Hairy",
 	        "Harmful",
 	        "Horny",
-	        "Opinions",
 	        "Infinite",
 	        "Invincible",
 	        "Logical",
@@ -328,6 +327,7 @@ var YSNG =
 	        "Fighting",
 	        "Freethinking",
 	        "Garbage",
+	        "Harmful",
 	        "Iron",
 	        "Reasoning",
 	        "Thinking"
@@ -345,6 +345,7 @@ var YSNG =
 	        "Atheism",
 	        "Cynicism",
 	        "Doubt",
+	        "Opinions",
 	        "Freethought",
 	        "Logic",
 	        "Reason",
