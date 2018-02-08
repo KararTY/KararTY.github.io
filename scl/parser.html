@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+      pre {
+        white-space: normal;
+      }
+    </style>
+</head>
+<body>
+  <input type="file" id="files" name="files[]" multiple>
+  <br/><progress value="0"></progress>
+  <pre>Logs will go here. File will try to start downloading after parsing is complete. Big files will hang browser for a long amount of time. So please be patient.
+    To check verbose, please open up webkit console BEFORE parsing, meaning: Open it now and keep it running until parse is fully complete.</pre>
+  <!-- 1.2.2 -->
+	<script src="https://cdn.rawgit.com/creatorrr/web-streams-polyfill/68f93d7240d925d27b175ce39133f57993c3f109/dist/polyfill.min.js" integrity="sha384-wC6EeO3kVv23JQA/XjoEHMvxOwXZXIRdxvhOt8rOcoGPYQnPbumUJugHHoJAdM0x" crossorigin="anonymous"></script>
+  <script>
+    !('serviceWorker' in navigator && !!new ReadableStream() && !!new WritableStream()) && prompt(
+      'Your browser does not support this. Please run it in NodeJS.' + '\nReadableStream is not supported, you can enable it in chrome via',
+      'chrome://flags/#enable-experimental-web-platform-features'
+    )
+  </script>
+  <script>
+    // NodeJS
+    function question () {
+      return rl.question('HexChat log file path: ', function (answer) {
+        var normalizedPath = path.normalize(answer).replace(/\\ /g, ' ')
+        if (path.isAbsolute(normalizedPath)) {
+          if (fs.existsSync(normalizedPath)) {
+            console.log('Found file')
+            rl.close()
+            start(false, normalizedPath)
+          } else {
+            console.log('\nFile', normalizedPath, 'not found.\n')
+            question()
+          }
+        } else {
+          console.log('\nPath', normalizedPath, 'is not absolute.\n')
+          question()
+        }
+      })
+    }
+
+    // Browser & NodeJS
+    function start (browser, file) {
+      var lines
+      if (!browser) {
+        var hexChatFile = fs.readFileSync(file).toString('utf8')
+        lines = hexChatFile.split(/[\n\r]/g)
+      } else {
+        lines = file.split(/[\n\r]/g)
+        document.querySelector('pre').innerText += '\nPARSING: ' + lines.length + ' LINES OF TEXT...'
+      }
+
+      var regex = {
+        logTimeRegex: /^\*\*\*\* /m,
+        timeRegex: /^[a-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}|[a-z]{3} [a-z]{3} ([0-9]{2}| [0-9]) [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4}/mi,
+        systemRegex: /\*\t/m,
+        message: {
+          content: />\t.*/mi, // Remove '>' and '\t'
+          author: /<.*>\t/mi // Remove '<', '>' and \t
+        }
+      }
+
+      var finalObject = {
+        a: [],
+        m: {}
+      }
+      var count = 0
+      var currentObject
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i]
+        // Force change
+        if (regex.logTimeRegex.test(line)) {
+          // Is log time. Check if it says 'BEGIN' OR 'ENDING'
+          if (line.includes('BEGIN LOGGING AT')) {
+            console.log('Date:', line.match(regex.timeRegex)[0])
+            if (browser) document.querySelector('pre').innerText += '\nDate: ' + line.match(regex.timeRegex)[0]
+            currentObject = new Date(line.match(regex.timeRegex)[0]).getTime().toString()
+            if (!finalObject.m[currentObject]) finalObject.m[currentObject] = []
+          } else if (line.includes('ENDING LOGGING AT')) {
+            // console.log('END', line.match(regex.timeRegex)[0])
+          }
+        } else if (regex.timeRegex.test(line) && regex.systemRegex.test(line)) {
+          // Is system message.
+          var m = line.slice(line.match(regex.systemRegex).index).replace(regex.systemRegex, '')
+          if (!m.startsWith('jtv') && !m.endsWith(') has left') && !m.endsWith(') has joined') && !m.startsWith('Disconnected') && !m.startsWith('Now talking on #')) {
+            // Capturing /me messages.
+            finalObject.m[currentObject].push({
+              a: finalObject.a.indexOf('#SYSTEM#MESSAGE') > -1 ? finalObject.a.indexOf('#SYSTEM#MESSAGE') : finalObject.a.push('#SYSTEM#MESSAGE') - 1,
+              m: line.slice(line.match(regex.systemRegex).index).replace(regex.systemRegex, ''),
+              t: new Date(line.match(regex.timeRegex)[0] + ' ' + new Date(Number(currentObject)).getFullYear().toString()).getTime()
+            })
+            count++
+          }
+        } else if (regex.timeRegex.test(line) && regex.message.author.test(line)) {
+          // Is user message.
+          var object = {
+            a: line.match(regex.message.author)[0].replace(/[<>\t]/g, ''),
+            m: line.slice(line.match(regex.message.author).index).replace(regex.message.author, '').replace(/^\t/, ''),
+            t: new Date(line.match(regex.timeRegex)[0] + ' ' + new Date(Number(currentObject)).getFullYear().toString()).getTime()
+          }
+          if (object.a === 'twitchnotify' && (object.m.includes('just subscribed to') || object.m.includes('resubscribed'))) {
+            // Don't keep.
+          } else {
+            object.a = finalObject.a.indexOf(object.a) > -1 ? finalObject.a.indexOf(object.a) : finalObject.a.push(object.a) - 1
+            finalObject.m[currentObject].push(object)
+            count++
+          }
+        }
+      }
+      console.log('Found', finalObject.a.length, 'unique users &', count, 'messages saved.')
+      if (!browser) {
+        // Creates 'archive' directory if it doesn't exist.
+        if (!fs.existsSync(path.join(__dirname, 'archive'))) {
+          console.log('Creating archive directory.')
+          fs.mkdirSync(path.join(__dirname, 'archive'))
+        }
+        fs.writeFile(path.join(__dirname, 'archive', currentObject + '.json'), JSON.stringify(finalObject), function (err) {
+          if (err) throw err
+          console.log('Done')
+        })
+      } else {
+        startWriting(currentObject, finalObject)
+      }
+    }
+
+    // Browser
+    var cacheFiles = []
+    function startWriting (c, object) {
+      var s = setInterval(function () {
+        if (window.streamSaver) {
+          console.log('Found streamSaver, sending file to user!')
+          clearInterval(s)
+          var e = object
+
+          var fileStream = window.streamSaver.createWriteStream(c + '.json')
+          var writer = fileStream.getWriter()
+          var encoder = new window.TextEncoder()
+          var data = JSON.stringify(e)
+          var uint8array = encoder.encode(data)
+
+          writer.write(uint8array)
+          writer.close() // Download
+        }
+      }, 50)
+    }
+    function parseFiles (cF) {
+      cacheFiles.forEach((f, i) => {
+        if (!f.r) {
+          var reader = new FileReader()
+          reader.addEventListener('load', text => {
+            start(true, text.target.result)
+          })
+          reader.addEventListener('progress', function (o) {
+            document.querySelector('progress').value = Math.round((o.loaded / o.total) * 100)
+          })
+          reader.addEventListener('loadend', (e) => {
+            // Stopped reading
+          })
+          reader.readAsText(f.f)
+          f.r = true
+        }
+      })
+    }
+    function handleFileSelect (e) {
+      var fi = e.target.files
+      for (var i = 0; i < fi.length; i++) {
+        var f = fi[i]
+
+        var fo = false
+        cacheFiles.forEach(cF => {
+          if (cF.n === `${f.name}${f.lastModified}${f.size}${f.type}`) fo = true
+        })
+        if (!fo) cacheFiles.push({f: f, r: false, n: `${f.name}${f.lastModified}${f.size}${f.type}`})
+        else console.error(new Error('File already found'))
+      }
+      document.getElementById('files').value = ''
+      if (cacheFiles.length > 0) parseFiles(cacheFiles)
+    }
+
+    if (typeof require !== 'undefined') {
+      // Run NodeJS
+      var fs = require('fs')
+      var path = require('path')
+
+      var readline = require('readline')
+      var rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+      })
+      question()
+    } else {
+      // Run BROWSER CODE
+      document.getElementById('files').addEventListener('change', function (e) { handleFileSelect(e) })
+      // Append streamSaver.
+      var sS = document.createElement('script')
+      sS.setAttribute('type', 'text/javascript')
+      sS.setAttribute('src', 'https://cdn.jsdelivr.net/npm/streamsaver@latest/StreamSaver.js')
+      document.getElementsByTagName('head')[0].appendChild(sS)
+    }
+  </script>
+</body>
+</html>
