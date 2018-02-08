@@ -364,8 +364,49 @@
               var dark = document.createElement('link')
               dark.id = 'dark'
               dark.type = 'text/css'
-              dark.rel = 'stylesheet'
-              dark.href = 'src/dark.css'
+              var css = document.createTextNode(`
+                div.column.is-3 {
+                  background-color: #363636;
+                }
+                div.column.is-3 a.menu-label {
+                  color: #fff;
+                }
+                div.column.is-3 a.menu-label:hover {
+                  color: #3273dc;
+                }
+                div.column.is-3 ul.menu-list a {
+                  color: #fff;
+                }
+                div.column.is-3 ul.menu-list a:hover {
+                  background-color: #292929;
+                  color: #f3f3f3;
+                }
+                div.column.is-3 + div.column {
+                  background-color: #17141f
+                }
+                @media screen and (max-width: 768px) {
+                  nav.pagination {
+                    width: 97.6vw !important;
+                  }
+                }
+                div.column.is-3 + div.column p {
+                  color: #dad8de;
+                  font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+                  font-size: 12px;
+                  line-height: 20px;
+                  font-stretch: 100%;
+                  font-weight: 400;
+                  text-size-adjust: 100%;
+                  -webkit-text-size-adjust: 100%;
+                  -moz-text-size-adjust: 100%;
+                  -ms-text-size-adjust: 100%;
+                }
+                div.column.is-3 + div.column p strong {
+                  color: #898395;
+                  font-weight: 600;
+                }
+              `)
+              dark.appendChild(css)
               document.getElementsByTagName('head')[0].appendChild(dark)
             } else {
               if (document.getElementById('dark')) document.getElementById('dark').outerHTML = ''
