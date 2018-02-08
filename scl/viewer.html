@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Stream Chat Logs Viewer</title>
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+  <script src="https://unpkg.com/hyperhtml@latest/min.js"></script>
+  <style>
+    html {
+      overflow: auto;
+    }
+    a.navbar-burger {
+      color: #f5f5f5
+    }
+    div.column.is-3 {
+      height: calc(100vh - 3.25rem);
+      overflow: auto;
+      overflow-x: hidden;
+    }
+    div.column.is-3 + div.column {
+      height: calc(100vh - 3.25rem);
+      overflow: auto;
+      overflow-x: hidden;
+    }
+    p#last {
+      padding-bottom: 2rem;
+    }
+    nav.pagination {
+      position: fixed;
+      bottom: 0;
+      width: 73.8vw;
+      margin-left:-11.8px;
+      background-color:#fff;
+    }
+    div.column.is-3 + div.column p {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 12px;
+      line-height: 20px;
+      font-stretch: 100%;
+      font-weight: 400;
+      text-size-adjust: 100%;
+      -webkit-text-size-adjust: 100%;
+      -moz-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar is-dark">
+    <div class="container">
+      <div class="navbar-brand">
+        <p class="navbar-item">Stream Chat Logs Viewer</p>
+        <a class="navbar-burger">
+          <span></span>
+          <span></span>
+          <span></span>
+        </a>
+      </div>
+      <div class="navbar-menu">
+        <div class="navbar-end"></div>
+      </div>
+    </div>
+  </nav>
+  <div class="columns is-marginless">
+    <div class="column is-3">
+      <!-- Menu -->
+      <aside class="menu is-unselectable">
+        <a class="menu-label">Please load files</a>
+      </aside>
+    </div>
+    <div class="column">
+      <!-- Logs -->
+      <div id="logs"></div>
+      <nav class="pagination"></nav>
+    </div>
+  </div>
+  <div class="container" id="options"></div>
+  <div class="modal is-active">
+    <div class="modal-background"></div>
+    <div id="modalInner">
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">Disclaimer</p>
+        </header>
+        <div class="modal-card-body">
+          <div class="content">
+            <h4>Stream Chat Logs is not affiliated with, endorsed, sponsored, or specifically approved by Twitch TV, Curse, Inc. and/or Amazon.com, Inc.</h4>
+          </div>
+        </div>
+        <div class="modal-card-foot">
+          <a onclick="javascript:document.querySelector('.modal').classList.toggle('is-active')" class="button">Acknowledge</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Scripts -->
+  <script>
+    document.querySelector('.navbar-burger').addEventListener('click', function () {
+      document.querySelector('.navbar-burger').classList.toggle('is-active')
+      document.querySelector('.navbar-menu').classList.toggle('is-active')
+    })
+    var heightToRem = document.querySelector('.pagination').clientHeight * 0.0625
+    window.addEventListener('resize', function () {
+      heightToRem = document.querySelector('.pagination').clientHeight * 0.0625
+      if (document.getElementById('last')) {
+        document.getElementById('last').style.paddingBottom = heightToRem + 'rem'
+      }
+    })
+  </script>
+  <script>
+    var hyper = window.hyperHTML
+    // Website loaded.
+
+    // Files
+    var cacheFiles = []
+    var chosen
+
+    // Abort loading
+    function abortLoad () {
+      // Abort load & Remove file from cache.
+      this.abort() // Abort filereader.
+      cacheFiles.forEach((f, i) => {
+        if (f.n === `${this.name}${this.lastModified}${this.size}${this.type}`) cacheFiles.splice(i, 1)
+      })
+    }
+
+    // Modal
+    function renderProgressModal (o = new ProgressEvent()) {
+      document.querySelector('.modal').classList.add('is-active')
+      if (typeof o === 'object') {
+        var loaded = Math.round((o.loaded / o.total) * 100)
+        hyper.bind(document.getElementById('modalInner'))`
+          <div class="modal-content">
+            <div class="card">
+              <div class="card-header">
+                <p class="card-header-title">Processing ${this.name}...</p>
+                <p class="card-header-icon"><strong>${loaded}%</strong></p>
+              </div>
+              <div class="card-content">
+                <progress class="progress" value="${loaded}" max="100">${loaded}%</progress>
+                <button class="button is-danger" onclick=${abortLoad.bind(this)}>Abort</button>
+              </div>
+            </div>
+          </div>
+        `
+      }
+    }
+
+    /** Give usernames random "unique" colors, like in Twitch chat.
+      * Quick and dirty, I'm unaware of how Twitch actually does it.
+      */
+    function authorColor (n = 'a') {
+      var colors = [
+        '#FF0000', '#0000FF', '#008000',
+        '#B22222', '#FF7F50', '#9ACD32',
+        '#FF4500', '#2E8B57', '#DAA520',
+        '#D2691E', '#5F9EA0', '#1E90FF',
+        '#FF69B4', '#8A2BE2', '#00FF7F'
+      ]
+      if (n.endsWith('a') || n.endsWith('b')) return colors[0]
+      if (n.endsWith('c') || n.endsWith('d')) return colors[1]
+      if (n.endsWith('e') || n.endsWith('f')) return colors[2]
+      if (n.endsWith('g') || n.endsWith('h')) return colors[3]
+      if (n.endsWith('i') || n.endsWith('j') || n.endsWith('9')) return colors[4]
+      if (n.endsWith('k') || n.endsWith('l') || n.endsWith('8')) return colors[5]
+      if (n.endsWith('m') || n.endsWith('n') || n.endsWith('7')) return colors[6]
+      if (n.endsWith('o') || n.endsWith('p') || n.endsWith('6')) return colors[7]
+      if (n.endsWith('q') || n.endsWith('r') || n.endsWith('5')) return colors[8]
+      if (n.endsWith('s') || n.endsWith('t') || n.endsWith('4')) return colors[9]
+      if (n.endsWith('u') || n.endsWith('v') || n.endsWith('3')) return colors[10]
+      if (n.endsWith('w') || n.endsWith('x') || n.endsWith('2')) return colors[11]
+      if (n.endsWith('y') || n.endsWith('z') || n.endsWith('1')) return colors[12]
+      if (n.endsWith('0')) return colors[13]
+      return colors[14]
+    }
+
+    function renderPagination (pg) {
+      var max = Math.ceil(cacheFiles[chosen.pos].p.m[chosen.ch].length / 100)
+      if (pg < max && pg >= 0) {
+        hyper.bind(document.querySelector('nav.pagination'))`
+          <ul class="pagination-list">
+            <li>
+              <a class="pagination-link" data-pg="0" onclick=${renderLogs}>First page (1)</a>
+            </li>
+            <li>
+              <span class="pagination-ellipsis">&hellip;</span>
+            </li>
+            <li>
+              <a class=${`pagination-link ${pg <= 0 ? 'is-current' : ''}`} data-pg="${pg - 1}" onclick=${renderLogs}>&lt; (${pg})</a>
+            </li>
+            <li>
+              <a class=${`pagination-link ${pg === 1 ? 'is-current' : (pg >= 2 && pg + 1 !== max) ? 'is-current' : ''}`} data-pg="${pg}" onclick=${renderLogs}>(${pg + 1})</a>
+            </li>
+            <li>
+              <a class=${`pagination-link ${(pg === 2 && pg === max) ? 'is-current' : pg + 1 >= max ? 'is-current' : ''}`} data-pg="${pg + 1}" onclick=${renderLogs}>(${pg + 2}) &gt;</a>
+            </li>
+            <li>
+              <span class="pagination-ellipsis">&hellip;</span>
+            </li>
+            <li>
+              <a class="pagination-link" data-pg="${max - 1}" onclick=${renderLogs}>Last page (${max})</a>
+            </li>
+          </ul>
+        `
+      }
+    }
+
+    function renderLogs (pg) {
+      var logsDateFormat = { hour: '2-digit', minute: '2-digit' }
+      var c = 100 * (typeof pg === 'number' ? pg : Number(this.dataset.pg))
+      var p = cacheFiles[chosen.pos].p.m[chosen.ch].slice(c, (c + 100) < cacheFiles[chosen.pos].p.m[chosen.ch].length ? c + 100 : undefined)
+      if (p) {
+        hyper.bind(document.getElementById('logs'))`
+          ${p.map((m, i) => hyper.wire()`
+            ${cacheFiles[chosen.pos].p.a[m.a] !== '#SYSTEM#MESSAGE' ? hyper.wire()`
+              <p id="${i === 0 ? 'first' : i >= (p.length - 1) ? 'last' : '' }"><strong>${new Date(m.t).toLocaleTimeString(navigator.languages[0] || 'en-US', logsDateFormat)} <span style="${{color: authorColor(cacheFiles[chosen.pos].p.a[m.a])}}">${cacheFiles[chosen.pos].p.a[m.a]}</span>:</strong> ${m.m}</p>
+            ` : hyper.wire()`
+              <p id="${i === 0 ? 'first' : i >= (p.length - 1) ? 'last' : '' }"><strong>${new Date(m.t).toLocaleTimeString(navigator.languages[0] || 'en-US', logsDateFormat)}</strong> <strong style="${{color: authorColor(m.m.split(' ')[0])}}">${m.m.split(' ')[0]}</strong> <span style="${{color: authorColor(m.m.split(' ')[0])}}">${m.m.split(' ').slice(1).join(' ')}</span></p>
+            `}
+          `)}
+        `
+        renderPagination(typeof pg === 'number' ? pg : Number(this.dataset.pg))
+        if (document.getElementById('first')) document.getElementById('first').scrollIntoView()
+      }
+    }
+
+    function initiateLog (e = new MouseEvent()) {
+      var ch = e.target.dataset.c
+      var pos = Number(e.target.parentNode.parentNode.dataset.p)
+      if (ch && Number.isInteger(pos)) {
+        chosen = {pos, ch}
+        renderLogs(0)
+        document.querySelectorAll('[data-c]').forEach(e => {
+          if (e.dataset.c === chosen.ch) e.classList.add('is-active')
+          else e.classList.remove('is-active')
+        })
+      }
+    }
+
+    // Render to sidebar menu
+    function renderSideBar () {
+      var sideBarDateFormat = { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }
+      // Toggle hide
+      var toggleHideSideBarItem = (e = new MouseEvent()) => {
+        e.target.parentNode.nextSibling.classList.toggle('is-hidden')
+      }
+      hyper.bind(document.querySelector('.menu'))`
+        ${cacheFiles.map((f, i) => hyper.wire()`
+          ${f.p ? hyper.wire()`
+            <p><a class="menu-label" onclick=${toggleHideSideBarItem}>${f.f.name} (Toggle)</a></p>
+            <ul class="menu-list" data-p="${i}">
+              ${Object.entries(f.p.m).map(p => hyper.wire()`
+                <li><a data-c="${p[0]}" onclick=${initiateLog}>${new Date(Number(p[0])).toLocaleDateString(navigator.languages[0] || 'en-US', sideBarDateFormat)} (${p[1].length})</a></li>
+              `)}
+            </ul>
+          ` : ''}
+        `)}
+      `
+    }
+
+    function parseFiles (cF) {
+      cacheFiles.forEach((f, i) => {
+        if (!f.r) {
+          var reader = new FileReader()
+          reader.addEventListener('load', json => {
+            var p = JSON.parse(json.target.result)
+            Object.entries(p.m).map(i => {
+              if (i[1].length === 0) delete p.m[i[0]]
+            })
+            cacheFiles[i].p = p
+            renderSideBar()
+          })
+          reader.addEventListener('progress', renderProgressModal)
+          reader.addEventListener('loadend', () => {
+            document.querySelector('.modal').classList.remove('is-active')
+            document.querySelector('.navbar-burger').classList.remove('is-active')
+            document.querySelector('.navbar-menu').classList.remove('is-active')
+          })
+          reader.readAsText(f.f)
+          f.r = true
+        }
+      })
+    }
+
+    // Handle file event
+    function handleFileSelect (e = new Event()) {
+      var fi = e.target.files
+      for (var i = 0; i < fi.length; i++) {
+        var f = fi[i]
+
+        var fo = false
+        cacheFiles.forEach(cF => {
+          if (cF.n === `${f.name}${f.lastModified}${f.size}${f.type}`) fo = true
+        })
+        if (!fo) cacheFiles.push({f: f, r: false, n: `${f.name}${f.lastModified}${f.size}${f.type}`})
+        else console.error(new Error('File already found'))
+      }
+      document.getElementById('files').value = ''
+      if (cacheFiles.length > 0) parseFiles(cacheFiles)
+    }
+
+    var uid = 0
+    var Option = function (o = {
+      n: 'Option name',
+      h: 'Option help text',
+      t: 'Type (toggle/select/input)',
+      v: [ { n: 'Option choice 0', s: Boolean(true) } ],
+      c: function (m = new MouseEvent()) {}
+    }) {
+      this.n = o.n || ''
+      this.h = o.h || ''
+      this.c = o.c
+      this.uid = o.uid || uid++
+      this.t = o.t || 'toggle'
+      this.v = o.v || [ { n: '', s: true } ]
+      this.r = function () {
+        return hyper.wire()`
+          <div class="field">
+            <label class="label">${this.n}</label>
+            <div class="control">
+              ${this.t === 'toggle' ? hyper.wire()`
+                ${this.v.map((o, i) => hyper.wire()`
+                  ${i.n} <input type="checkbox" value="${i}" name="${o.n}" onchange=${this.c.bind(this)} checked=${o.s}>
+                `)}
+              ` : this.t === 'select' ? hyper.wire()`
+                <div class="select">
+                  <select name="${this.n}" onchange=${this.c.bind(this)}>
+                    ${this.v.map((o, i) => hyper.wire()`
+                      <option selected="${o.s}" value="${i}">${o.n}</option>
+                    `)}
+                  </select>
+                </div>
+              ` : hyper.wire()`
+                <p>Error, no type selected.</p>
+              `}
+            </div>
+            <p class="help">${this.h}</p>
+          </div>
+        `
+      }
+    }
+
+    // Load settings if it exists
+    var loadedSettings = window.localStorage.getItem('settings')
+
+    // Default settings
+    var options = [
+      new Option({
+        n: 'Theme',
+        h: 'Choose a theme for the UI.',
+        t: 'select',
+        uid: 101,
+        v: [ { n: 'Light', s: true }, { n: 'Dark', s: false } ],
+        c: function (m) {
+          if (typeof m === 'number' ? m > -1 : true) {
+            var choice = Number(m.target ? m.target.value : m) // P = Position
+            this.v.map(i => { i.s = false }) // Reset all to false.
+            this.v[choice].s = true
+            console.log(choice, this.v[choice])
+            // Theme enable
+            if (this.v[choice].n === 'Dark') {
+              var dark = document.createElement('link')
+              dark.id = 'dark'
+              dark.type = 'text/css'
+              dark.rel = 'stylesheet'
+              dark.href = 'src/dark.css'
+              document.getElementsByTagName('head')[0].appendChild(dark)
+            } else {
+              if (document.getElementById('dark')) document.getElementById('dark').outerHTML = ''
+            }
+          }
+        }
+      }),
+      new Option({
+        n: 'Font size',
+        h: 'Change font size of logs. Small is normal twitch size. Medium & big adds extra padding.',
+        t: 'select',
+        uid: 102,
+        v: [ { n: 'Small', s: true }, { n: 'Medium', s: false }, { n: 'Big', s: false } ],
+        c: function (m) {
+          if (typeof m === 'number' ? m > -1 : true) {
+            var choice = Number(m.target ? m.target.value : m) // P = Position
+            this.v.map(i => { i.s = false }) // Reset all to false.
+            this.v[choice].s = true
+            console.log(choice, this.v[choice])
+            var doc = document.getElementById('misc')
+            var append
+            if (this.v[choice].n === 'Small') {
+              // Small (Normal twitch)
+              if (doc) doc.outerHTML = ''
+            } else if (this.v[choice].n === 'Medium') {
+              // Medium
+              append = () => {
+                doc = document.createElement('style')
+                doc.id = 'misc'
+                doc.type = 'text/css'
+                var css = document.createTextNode('#logs p { font-size: 18px; padding: .5rem 0; }')
+                doc.appendChild(css)
+                document.getElementsByTagName('head')[0].appendChild(doc)
+              }
+              if (doc) doc.outerHTML = ''
+              append()
+            } else {
+              // Big
+              append = () => {
+                doc = document.createElement('style')
+                doc.id = 'misc'
+                doc.type = 'text/css'
+                var css = document.createTextNode('#logs p { font-size: 24px; padding: .7rem 0; }')
+                doc.appendChild(css)
+                document.getElementsByTagName('head')[0].appendChild(doc)
+              }
+              if (doc) doc.outerHTML = ''
+              append()
+            }
+          }
+        }
+      })
+    ]
+
+    // If there are any settings, load them.
+    if (loadedSettings) {
+      var json = JSON.parse(loadedSettings)
+      json.forEach(o => {
+        options.forEach((op, i) => { if (op.uid === o.uid) { options[i].v = o.v; options[i].c(options[i].v.findIndex(f => f.s === true)) } })
+      })
+    }
+
+    // Render navbar end & navbar burger menu
+    var nI = [{ n: 'Choose file(s)',
+      a: function () {
+        if (window.File && window.FileReader && window.FileList && window.Blob) {
+          document.getElementById('files').click()
+        } else {
+          alert('The File APIs are not fully supported in this browser, please use another browser.')
+        }
+      } }, { n: 'Options',
+      a: function () {
+        var toggle = function () { document.querySelector('.modal').classList.toggle('is-active') }
+        var save = function () {
+          var object = []
+          options.forEach(o => {
+            object.push({uid: o.uid, v: o.v})
+          })
+          console.log(object)
+          window.localStorage.setItem('settings', JSON.stringify(object))
+          toggle()
+        }
+        hyper.bind(document.getElementById('modalInner'))`
+          <div class="modal-content">
+            <div class="card">
+              <div class="card-header">
+                <p class="card-header-title">Options</p>
+              </div>
+              <div class="card-content">
+                ${options.map(i => i.r())}
+              </div>
+              <div class="card-footer">
+                <a class="card-footer-item" onclick=${save}>Save</a>
+                <a class="card-footer-item" onclick=${toggle}>Close</a>
+              </div>
+            </div>
+          </div>
+        `
+        toggle()
+      } }, { n: 'About',
+      a: function () {
+        var toggle = function () { document.querySelector('.modal').classList.toggle('is-active') }
+        hyper.bind(document.getElementById('modalInner'))`
+          <div class="modal-card">
+            <header class="modal-card-head">
+              <p class="modal-card-title">About</p>
+            </header>
+            <div class="modal-card-body">
+              <div class="content">
+                <h4>Note: This parses only JSON files generated by the HexChat2JSON parser.</h4>
+                <p>Program was inspired by a Discord user.</p>
+                <h4>Libraries in use</h4>
+                <ul>
+                  <li><a href="https://github.com/WebReflection/hyperHTML">hyperHTML (github link)</a> by Andrea Giammarchi, @WebReflection licensed under ISC License.</li>
+                </ul>
+                <h4>MIT License</h4>
+                <p>Copyright (c) 2017 Karar Al-Remahy</p>
+
+                <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+                of this software and associated documentation files (the "Software"), to deal
+                in the Software without restriction, including without limitation the rights
+                to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+                copies of the Software, and to permit persons to whom the Software is
+                furnished to do so, subject to the following conditions:</p>
+
+                <p>The above copyright notice and this permission notice shall be included in all
+                copies or substantial portions of the Software.</p>
+
+                <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+                IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+                FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+                AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+                LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+                OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+                SOFTWARE.</p>
+
+                <h4>Stream Chat Logs is not affiliated with, endorsed, sponsored, or specifically approved by Twitch TV, Curse, Inc. and/or Amazon.com, Inc.</h4>
+              </div>
+            </div>
+            <div class="modal-card-foot">
+              <a class="button" onclick=${toggle}>Close</a>
+            </div>
+          </div>
+        `
+        toggle()
+      } }]
+    hyper.bind(document.querySelector('.navbar-end'))`
+      ${nI.map(i => hyper.wire()`
+        <a class="navbar-item" onclick=${i.a}>${i.n}</a>
+      `)}
+      <input type="file" id="files" name="files[]" multiple class="is-hidden" onchange=${handleFileSelect}>
+    `
+  </script>
+  <!-- MIT Karar AL-Remahy <https://github.com/kararty> -->
+</body>
+</html>
