@@ -38,7 +38,7 @@ function messageRender (m, u, r) {
   k.c = k.u.r ? ((k.u.r.length > 0) ? r[k.u.r[k.u.r.length - 1]].c : undefined) : (k.u.roles ? ((k.u.roles.length > 0) ? r[k.u.roles[k.u.roles.length - 1]].hexColor : undefined) : undefined)
   var backwardsCompat = (i) => {
     return {
-      name: i.n || i.name,
+      name: i.n || i.filename,
       url: i.u || i.url
     }
   }
@@ -53,7 +53,7 @@ function messageRender (m, u, r) {
             <strong style=${{ color: k.c }} title="${k.u.tg || k.u.tag}">${(k.u.nn || k.u.nickname) ? k.u.nn || k.u.nickname : k.u.n || k.u.name}</strong> <small title="${moment(m.t || m.timestamp).format()}">${moment(m.t || m.timestamp).fromNow()}</small> ${(m.e || m.edited) ? hyper.wire()`<small title="${moment(m.e || m.edited).format()}"> (edited)</small>` : ''}
             ${k.m.length > 0 ? hyper.wire()`<br><span style=${{ whiteSpace: 'pre-wrap' }}>${k.m}</span>` : ''}
             ${k.a.length > 0 ? k.a.map(i => hyper.wire()`
-              ${['webp', 'png', 'gif', 'jpg', 'jpeg', 'apng', 'bmp', 'ico'].includes(i.n.toLowerCase().split('.').pop()) ? hyper.wire()`
+              ${['webp', 'png', 'gif', 'jpg', 'jpeg', 'apng', 'bmp', 'ico'].includes(backwardsCompat(i).name.toLowerCase().split('.').pop()) ? hyper.wire()`
                 <br><a title="${backwardsCompat(i).name}" href="${backwardsCompat(i).url}" target="_blank"><img src="${backwardsCompat(i).url}"></img></a>
               ` : hyper.wire()`<br><a title="${backwardsCompat(i).name}" href="${backwardsCompat(i).url}" target="_blank">${backwardsCompat(i).name}</a>`}
             `) : ''}
@@ -91,7 +91,13 @@ function memberRender (u, r) {
 }
 
 function paginationRender (p) {
-  console.log(p)
+  if (p.max === 0) {
+    document.getElementById('messages').style.height = 'calc(100vh - 48px)'
+    document.querySelector('.d-server-channel-messages-wrapper').nextElementSibling.classList.add('is-hidden')
+  } else {
+    document.getElementById('messages').style.height = 'calc(100vh - 144px)'
+    document.querySelector('.d-server-channel-messages-wrapper').nextElementSibling.classList.remove('is-hidden')
+  }
   return hyper.wire()`
     ${p.max > 3 ? hyper.wire()`
       <li>
@@ -148,7 +154,7 @@ function loadMessages (p, m, u, r, scroll) {
       return (a.t || a.timestamp) - (b.t || b.timestamp)
     }).reverse().slice(p.i.i * 100, ((p.i.i * 100) + 100) < m.length ? ((p.i.i * 100) + 100) : undefined).reverse()
   }
-  console.log(p, cacheChannels, messages, scroll, messages.length, max)
+  console.log(p, messages, scroll, messages.length, max)
   if (messages.length > 0) {
     if ((p.i.i === 0) || p.w === 'below') {
       document.getElementById('messages').appendChild(hyper.wire()`
@@ -160,7 +166,7 @@ function loadMessages (p, m, u, r, scroll) {
       if (document.querySelectorAll('[data-set]').length > 1) document.getElementById('messages').scrollTop = p.s - (p.s - (p.s / 1.1))
       else if (p.i.i > 0) {
         console.log('No')
-        loadMessages({ i: { i: cacheChannels[loading][p.c].i - 1 }, c: p.c }, m, u, r)
+        loadMessages({ i: { i: cacheChannels[loading][p.i.f][p.c].i - 1, f: p.i.f }, c: p.c }, m, u, r)
       }
       if (document.querySelectorAll('[data-set]').length > 3) document.getElementById('messages').removeChild(document.getElementById('messages').firstChild)
     } else if (p.w === 'above') {
@@ -179,18 +185,18 @@ function loadMessages (p, m, u, r, scroll) {
           ${p.i.i > 0 ? hyper.wire()`<hr>` : ''}
         </div>
       `)
-      // document.getElementById('messages').scrollTop = cacheChannels[loading][p.c].w
+      // document.getElementById('messages').scrollTop = cacheChannels[loading][p.i.f][p.c].w
     }
     document.getElementById('messages').onscroll = null
     document.getElementById('messages').onscroll = () => {
       if (p.i.i < max && document.getElementById('messages').scrollTop === 0) {
-        cacheChannels[loading][p.c].i += 1
-        cacheChannels[loading][p.c].w = document.getElementById('messages').scrollTop
-        loadMessages({ i: { i: cacheChannels[loading][p.c].i }, c: p.c, w: 'above', s: document.getElementById('messages').scrollHeight }, m, u, r, true)
-      } else if (cacheChannels[loading][p.c].i > 0 && document.getElementById('messages').scrollTop > document.getElementById('messages').scrollHeight / 1.1) {
-        cacheChannels[loading][p.c].i -= 1
-        cacheChannels[loading][p.c].w = document.getElementById('messages').scrollTop
-        if (!document.querySelector(`[data-set="${cacheChannels[loading][p.c].i}"]`)) loadMessages({ i: { i: cacheChannels[loading][p.c].i }, c: p.c, w: 'below', s: document.getElementById('messages').scrollHeight }, m, u, r, true)
+        cacheChannels[loading][p.i.f][p.c].i += 1
+        cacheChannels[loading][p.i.f][p.c].w = document.getElementById('messages').scrollTop
+        loadMessages({ i: { i: cacheChannels[loading][p.i.f][p.c].i, f: p.i.f }, c: p.c, w: 'above', s: document.getElementById('messages').scrollHeight }, m, u, r, true)
+      } else if (cacheChannels[loading][p.i.f][p.c].i > 0 && document.getElementById('messages').scrollTop > document.getElementById('messages').scrollHeight / 1.1) {
+        cacheChannels[loading][p.i.f][p.c].i -= 1
+        cacheChannels[loading][p.i.f][p.c].w = document.getElementById('messages').scrollTop
+        if (!document.querySelector(`[data-set="${cacheChannels[loading][p.i.f][p.c].i}"]`)) loadMessages({ i: { i: cacheChannels[loading][p.i.f][p.c].i, f: p.i.f }, c: p.c, w: 'below', s: document.getElementById('messages').scrollHeight }, m, u, r, true)
       }
     }
     if (p.i.i === 0 && !document.querySelector(`[data-set="1"]`)) document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight
@@ -199,12 +205,13 @@ function loadMessages (p, m, u, r, scroll) {
 
 function loadChannel (m = new MouseEvent()) {
   var c = m.target.dataset.id
-  var f = Number.isNaN(Number(m.target.dataset.f)) ? undefined : Number(m.target.dataset.f)
-  if (!cacheChannels[loading]) cacheChannels[loading] = {}
-  if (!cacheChannels[loading][c]) cacheChannels[loading][c] = { i: 0, f: 0 }
-  if (typeof f === 'number') cacheChannels[c].f = f
+  var f = Number.isNaN(Number(m.target.dataset.f)) ? 0 : Number(m.target.dataset.f)
+  if (!cacheChannels[loading]) cacheChannels[loading] = []
+  if (!cacheChannels[loading][f]) cacheChannels[loading][f] = {}
+  if (!cacheChannels[loading][f][c]) cacheChannels[loading][f][c] = { i: 0, f: 0 }
+  if (typeof f === 'number') cacheChannels[loading][f][c].f = f
 
-  console.log(loading, c, f, cacheChannels[loading][c], cacheFiles[loading].fi[c])
+  console.log(loading, c, f, cacheChannels[loading][f][c], cacheFiles[loading].fi[c])
   var fReader = new FileReader()
   fReader.addEventListener('load', json => {
     var p = JSON.parse(json.target.result)
@@ -219,16 +226,16 @@ function loadChannel (m = new MouseEvent()) {
     }
     if (!Object.keys(backwardsCompat.r).length > 0) backwardsCompat.r = undefined
     document.getElementById('channelname').innerHTML = `# ${backwardsCompat.name || `${Object.entries(p.u)[0][1].n} & ${Object.entries(p.u)[1][1].n}`}`
-    document.getElementById('channeltopic').innerHTML = String(backwardsCompat.topic ? backwardsCompat.topic : (backwardsCompat.g ? '' : `${Object.entries(p.u)[0][1].tg} & ${Object.entries(p.u)[1][1].tg}`)).substr(0, 101)
-    document.getElementById('channeltopic').title = backwardsCompat.topic ? backwardsCompat.topic : (backwardsCompat.g ? '' : `${Object.entries(p.u)[0][1].tg} & ${Object.entries(p.u)[1][1].tg}`)
+    document.getElementById('channeltopic').innerHTML = String(backwardsCompat.topic ? backwardsCompat.topic : (backwardsCompat.g ? '' : p.m ? `${Object.entries(p.u)[0][1].tg} & ${Object.entries(p.u)[1][1].tg}` : '')).substr(0, 101)
+    document.getElementById('channeltopic').title = backwardsCompat.topic ? backwardsCompat.topic : (backwardsCompat.g ? '' : p.m ? `${Object.entries(p.u)[0][1].tg} & ${Object.entries(p.u)[1][1].tg}` : '')
     if (document.getElementById('channeltopic').innerText.length > 99) document.getElementById('channeltopic').innerHTML += '...'
     if (document.getElementById('channeltopic').innerText.length < 2) document.getElementById('channeltopic').classList.add('is-hidden')
     else document.getElementById('channeltopic').classList.remove('is-hidden')
 
     document.getElementById('messages').innerHTML = ''
-    // cacheChannels[loading][c].i--
-    console.log(cacheChannels[loading][c].i)
-    loadMessages({i: cacheChannels[loading][c], c}, backwardsCompat.m, backwardsCompat.u, backwardsCompat.r)
+    // cacheChannels[loading][f][c].i--
+    console.log(cacheChannels[loading][f][c].i)
+    loadMessages({i: cacheChannels[loading][f][c], c}, backwardsCompat.m, backwardsCompat.u, backwardsCompat.r)
 
     document.getElementById('members').querySelector('.menu-list').classList.remove('is-hidden')
     hyper.bind(document.getElementById('members').querySelector('.menu-list'))`
@@ -239,14 +246,14 @@ function loadChannel (m = new MouseEvent()) {
 
     document.getElementById('pagination').classList.remove('is-hidden')
     hyper.bind(document.getElementById('pagination'))`
-      ${paginationRender({id: c, c: cacheChannels[loading][c].f, max: cacheFiles[loading].fi[c].length - 1})}
+      ${paginationRender({id: c, c: cacheChannels[loading][f][c].f, max: cacheFiles[loading].fi[c].length - 1})}
     `
   })
   fReader.addEventListener('progress', renderProgressModal)
   fReader.addEventListener('loadend', () => {
     document.querySelector('.modal').classList.remove('is-active')
   })
-  fReader.readAsText(cacheFiles[loading].fi[c][cacheChannels[loading][c].f].res)
+  fReader.readAsText(cacheFiles[loading].fi[c][cacheChannels[loading][f][c].f].res)
 }
 
 function renderChannels (c) {
