@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
-    <style>
-      pre {
-        white-space: normal;
-      }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Stream Chat Logs Parser</title>
+  <style>
+    pre {
+      white-space: normal;
+    }
+  </style>
 </head>
 <body>
   <input type="file" id="files" name="files[]" multiple>
   <br/><progress value="0"></progress>
+  <p>Note: Please export your .log file in English localization. This parser does NOT work for any other localization.</p>
   <pre>Logs will go here. File will try to start downloading after parsing is complete. Big files will hang browser for a long amount of time. So please be patient.
     To check verbose, please open up webkit console BEFORE parsing, meaning: Open it now and keep it running until parse is fully complete.</pre>
   <!-- 1.2.2 -->
@@ -55,79 +56,80 @@
         lines = file.split(/[\n\r]/g)
         document.querySelector('pre').innerText += '\nPARSING: ' + lines.length + ' LINES OF TEXT...'
       }
-
-      var regex = {
+      setTimeout(() => {
+        var regex = {
         logTimeRegex: /^\*\*\*\* /m,
-        timeRegex: /^[a-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}|[a-z]{3} [a-z]{3} ([0-9]{2}| [0-9]) [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4}/mi,
+        timeRegex: /^[\S]{3} [0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}|[\S]{3} [\S]{3} ([0-9]{2}| [0-9]) [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4}/mi,
         systemRegex: /\*\t/m,
         message: {
           content: />\t.*/mi, // Remove '>' and '\t'
           author: /<.*>\t/mi // Remove '<', '>' and \t
-        }
-      }
-
-      var finalObject = {
-        a: [],
-        m: {}
-      }
-      var count = 0
-      var currentObject
-
-      for (var i = 0; i < lines.length; i++) {
-        var line = lines[i]
-        // Force change
-        if (regex.logTimeRegex.test(line)) {
-          // Is log time. Check if it says 'BEGIN' OR 'ENDING'
-          if (line.includes('BEGIN LOGGING AT')) {
-            console.log('Date:', line.match(regex.timeRegex)[0])
-            if (browser) document.querySelector('pre').innerText += '\nDate: ' + line.match(regex.timeRegex)[0]
-            currentObject = new Date(line.match(regex.timeRegex)[0]).getTime().toString()
-            if (!finalObject.m[currentObject]) finalObject.m[currentObject] = []
-          } else if (line.includes('ENDING LOGGING AT')) {
-            // console.log('END', line.match(regex.timeRegex)[0])
           }
-        } else if (regex.timeRegex.test(line) && regex.systemRegex.test(line)) {
-          // Is system message.
-          var m = line.slice(line.match(regex.systemRegex).index).replace(regex.systemRegex, '')
-          if (!m.startsWith('jtv') && !m.endsWith(') has left') && !m.endsWith(') has joined') && !m.startsWith('Disconnected') && !m.startsWith('Now talking on #')) {
-            // Capturing /me messages.
-            finalObject.m[currentObject].push({
-              a: finalObject.a.indexOf('#SYSTEM#MESSAGE') > -1 ? finalObject.a.indexOf('#SYSTEM#MESSAGE') : finalObject.a.push('#SYSTEM#MESSAGE') - 1,
-              m: line.slice(line.match(regex.systemRegex).index).replace(regex.systemRegex, ''),
+        }
+
+        var finalObject = {
+          a: [],
+          m: {}
+        }
+        var count = 0
+        var currentObject
+
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i]
+          // Force change
+          if (regex.logTimeRegex.test(line)) {
+            // Is log time. Check if it says 'BEGIN' OR 'ENDING'
+            if (line.includes('BEGIN LOGGING AT')) {
+              console.log('Date:', line.match(regex.timeRegex)[0])
+              if (browser) document.querySelector('pre').innerText += '\nDate: ' + line.match(regex.timeRegex)[0]
+              currentObject = new Date(line.match(regex.timeRegex)[0]).getTime().toString()
+              if (!finalObject.m[currentObject]) finalObject.m[currentObject] = []
+            } else if (line.includes('ENDING LOGGING AT')) {
+              // console.log('END', line.match(regex.timeRegex)[0])
+            }
+          } else if (regex.timeRegex.test(line) && regex.systemRegex.test(line)) {
+            // Is system message.
+            var m = line.slice(line.match(regex.systemRegex).index).replace(regex.systemRegex, '')
+            if (!m.startsWith('jtv') && !m.endsWith(') has left') && !m.endsWith(') has joined') && !m.startsWith('Disconnected') && !m.startsWith('Now talking on #')) {
+              // Capturing /me messages.
+              finalObject.m[currentObject].push({
+                a: finalObject.a.indexOf('#SYSTEM#MESSAGE') > -1 ? finalObject.a.indexOf('#SYSTEM#MESSAGE') : finalObject.a.push('#SYSTEM#MESSAGE') - 1,
+                m: line.slice(line.match(regex.systemRegex).index).replace(regex.systemRegex, ''),
+                t: new Date(line.match(regex.timeRegex)[0] + ' ' + new Date(Number(currentObject)).getFullYear().toString()).getTime()
+              })
+              count++
+            }
+          } else if (regex.timeRegex.test(line) && regex.message.author.test(line)) {
+            // Is user message.
+            var object = {
+              a: line.match(regex.message.author)[0].replace(/[<>\t]/g, ''),
+              m: line.slice(line.match(regex.message.author).index).replace(regex.message.author, '').replace(/^\t/, ''),
               t: new Date(line.match(regex.timeRegex)[0] + ' ' + new Date(Number(currentObject)).getFullYear().toString()).getTime()
-            })
-            count++
-          }
-        } else if (regex.timeRegex.test(line) && regex.message.author.test(line)) {
-          // Is user message.
-          var object = {
-            a: line.match(regex.message.author)[0].replace(/[<>\t]/g, ''),
-            m: line.slice(line.match(regex.message.author).index).replace(regex.message.author, '').replace(/^\t/, ''),
-            t: new Date(line.match(regex.timeRegex)[0] + ' ' + new Date(Number(currentObject)).getFullYear().toString()).getTime()
-          }
-          if (object.a === 'twitchnotify' && (object.m.includes('just subscribed to') || object.m.includes('resubscribed'))) {
-            // Don't keep.
-          } else {
-            object.a = finalObject.a.indexOf(object.a) > -1 ? finalObject.a.indexOf(object.a) : finalObject.a.push(object.a) - 1
-            finalObject.m[currentObject].push(object)
-            count++
+            }
+            if (object.a === 'twitchnotify' && (object.m.includes('just subscribed to') || object.m.includes('resubscribed'))) {
+              // Don't keep.
+            } else {
+              object.a = finalObject.a.indexOf(object.a) > -1 ? finalObject.a.indexOf(object.a) : finalObject.a.push(object.a) - 1
+              finalObject.m[currentObject].push(object)
+              count++
+            }
           }
         }
-      }
-      console.log('Found', finalObject.a.length, 'unique users &', count, 'messages saved.')
-      if (!browser) {
-        // Creates 'archive' directory if it doesn't exist.
-        if (!fs.existsSync(path.join(__dirname, 'archive'))) {
-          console.log('Creating archive directory.')
-          fs.mkdirSync(path.join(__dirname, 'archive'))
+        console.log('Found', finalObject.a.length, 'unique users &', count, 'messages saved.')
+        if (!browser) {
+          // Creates 'archive' directory if it doesn't exist.
+          if (!fs.existsSync(path.join(__dirname, 'archive'))) {
+            console.log('Creating archive directory.')
+            fs.mkdirSync(path.join(__dirname, 'archive'))
+          }
+          fs.writeFile(path.join(__dirname, 'archive', currentObject + '.json'), JSON.stringify(finalObject), function (err) {
+            if (err) throw err
+            console.log('Done')
+          })
+        } else {
+          startWriting(currentObject, finalObject)
         }
-        fs.writeFile(path.join(__dirname, 'archive', currentObject + '.json'), JSON.stringify(finalObject), function (err) {
-          if (err) throw err
-          console.log('Done')
-        })
-      } else {
-        startWriting(currentObject, finalObject)
-      }
+      }, 1000)
     }
 
     // Browser
