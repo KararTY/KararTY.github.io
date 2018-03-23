@@ -14,7 +14,8 @@
 <body>
   <input type="file" id="files" name="files[]" multiple>
   <br/><progress value="0"></progress>
-  <p>Note: Please export your .log file in English localization. This parser does NOT work for any other localization.</p>
+  <p>Note: Please export your .log file in English localization. This parser DOES NOT work for any other localization.</p>
+  <p>Another note: Please enable all popups on this site, that's how the downloader works.</p>
   <pre>Logs will go here. File will try to start downloading after parsing is complete. Big files will hang browser for a long amount of time. So please be patient.
     To check verbose, please open up webkit console BEFORE parsing, meaning: Open it now and keep it running until parse is fully complete.</pre>
   <!-- 1.2.2 -->
@@ -28,7 +29,7 @@
   <script>
     // NodeJS
     function question () {
-      return rl.question('HexChat log file path: ', function (answer) {
+      return rl.question('NOTE: Please export your .log file in English localization. This parser DOES NOT work for any other localization.\n\nHexChat log file path:\n', function (answer) {
         var normalizedPath = path.normalize(answer).replace(/\\ /g, ' ')
         if (path.isAbsolute(normalizedPath)) {
           if (fs.existsSync(normalizedPath)) {
@@ -73,7 +74,7 @@
         }
         var count = 0
         var currentObject
-
+        var lastDate // Compare dates, make new date.
         for (var i = 0; i < lines.length; i++) {
           var line = lines[i]
           // Force change
@@ -83,6 +84,7 @@
               console.log('Date:', line.match(regex.timeRegex)[0])
               if (browser) document.querySelector('pre').innerText += '\nDate: ' + line.match(regex.timeRegex)[0]
               currentObject = new Date(line.match(regex.timeRegex)[0]).getTime().toString()
+              lastDate = new Date(Number(currentObject)).getDay()
               if (!finalObject.m[currentObject]) finalObject.m[currentObject] = []
             } else if (line.includes('ENDING LOGGING AT')) {
               // console.log('END', line.match(regex.timeRegex)[0])
@@ -109,25 +111,40 @@
             if (object.a === 'twitchnotify' && (object.m.includes('just subscribed to') || object.m.includes('resubscribed'))) {
               // Don't keep.
             } else {
+              // IS DAY DIFFERENT? If true Update 'currentObject' variable.
+              if (lastDate !== new Date(Number(object.t)).getDay()) {
+                currentObject = object.t
+                if (!finalObject.m[currentObject]) finalObject.m[currentObject] = []
+                lastDate = new Date(Number(object.t)).getDay()
+                console.log(lastDate, new Date(Number(object.t)).getDay(), currentObject)
+              } else lastDate = new Date(Number(object.t)).getDay()
               object.a = finalObject.a.indexOf(object.a) > -1 ? finalObject.a.indexOf(object.a) : finalObject.a.push(object.a) - 1
               finalObject.m[currentObject].push(object)
               count++
             }
           }
         }
-        console.log('Found', finalObject.a.length, 'unique users &', count, 'messages saved.')
-        if (!browser) {
-          // Creates 'archive' directory if it doesn't exist.
-          if (!fs.existsSync(path.join(__dirname, 'archive'))) {
-            console.log('Creating archive directory.')
-            fs.mkdirSync(path.join(__dirname, 'archive'))
+        console.log('Found', finalObject.a.length, 'unique users &', count, 'messages saved.', finalObject.a.length > 0, count > 0)
+        if (finalObject.a.length > 0 && count > 0) {
+          if (!browser) {
+              // Creates 'archive' directory if it doesn't exist.
+            if (!fs.existsSync(path.join(__dirname, 'archive'))) {
+              console.log('Creating archive directory.')
+              fs.mkdirSync(path.join(__dirname, 'archive'))
+            }
+            fs.writeFile(path.join(__dirname, 'archive', currentObject + '.json'), JSON.stringify(finalObject), function (err) {
+              if (err) throw err
+              console.log('Done')
+            })
+          } else {
+            startWriting(currentObject, finalObject)
           }
-          fs.writeFile(path.join(__dirname, 'archive', currentObject + '.json'), JSON.stringify(finalObject), function (err) {
-            if (err) throw err
-            console.log('Done')
-          })
         } else {
-          startWriting(currentObject, finalObject)
+          if (browser) {
+            document.querySelector('pre').innerText += '\nNothing was found. Are you sure this is a HexChat, or similar, log file?\nLog dates must start with "BEGIN LOGGING AT" and month dates MUST be in English localization.'
+          } else {
+            console.log('Nothing was found.', 'Are you sure this is a HexChat, or similar, log file?', 'Log dates must start with "BEGIN LOGGING AT" and month dates MUST be in English localization.')
+          }
         }
       }, 1000)
     }
