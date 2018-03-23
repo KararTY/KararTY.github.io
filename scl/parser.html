@@ -19,7 +19,6 @@
   <pre>Logs will go here. File will try to start downloading after parsing is complete. Big files will hang browser for a long amount of time. So please be patient.
     To check verbose, please open up webkit console BEFORE parsing, meaning: Open it now and keep it running until parse is fully complete.</pre>
   <!-- 1.2.2 -->
-	<script src="https://cdn.rawgit.com/creatorrr/web-streams-polyfill/68f93d7240d925d27b175ce39133f57993c3f109/dist/polyfill.min.js" integrity="sha384-wC6EeO3kVv23JQA/XjoEHMvxOwXZXIRdxvhOt8rOcoGPYQnPbumUJugHHoJAdM0x" crossorigin="anonymous"></script>
   <script>
     !('serviceWorker' in navigator && !!new ReadableStream() && !!new WritableStream()) && prompt(
       'Your browser does not support this. Please run it in NodeJS.' + '\nReadableStream is not supported, you can enable it in chrome via',
@@ -27,6 +26,7 @@
     )
   </script>
   <script>
+    var debugVar = []
     // NodeJS
     function question () {
       return rl.question('NOTE: Please export your .log file in English localization. This parser DOES NOT work for any other localization.\n\nHexChat log file path:\n', function (answer) {
@@ -116,7 +116,6 @@
                 currentObject = object.t
                 if (!finalObject.m[currentObject]) finalObject.m[currentObject] = []
                 lastDate = new Date(Number(object.t)).getDay()
-                console.log(lastDate, new Date(Number(object.t)).getDay(), currentObject)
               } else lastDate = new Date(Number(object.t)).getDay()
               object.a = finalObject.a.indexOf(object.a) > -1 ? finalObject.a.indexOf(object.a) : finalObject.a.push(object.a) - 1
               finalObject.m[currentObject].push(object)
@@ -156,16 +155,25 @@
         if (window.streamSaver) {
           console.log('Found streamSaver, sending file to user!')
           clearInterval(s)
-          var e = object
 
           var fileStream = window.streamSaver.createWriteStream(c + '.json')
           var writer = fileStream.getWriter()
           var encoder = new window.TextEncoder()
-          var data = JSON.stringify(e)
+          var data = JSON.stringify(object)
           var uint8array = encoder.encode(data)
-
           writer.write(uint8array)
-          writer.close() // Download
+
+          setTimeout(() => {
+            var downloadConfirm = confirm(`Do you want to download the parsed file?`)
+            if (downloadConfirm) {
+              writer.close() // Download
+            } else {
+              writer.abort('User abort.')
+              console.log('Very well, no download.', "Here's the parsed result:")
+              console.log(object)
+              console.log('Disregard Promise error.')
+            }
+          }, 100);
         }
       }, 50)
     }
@@ -222,6 +230,13 @@
       sS.setAttribute('type', 'text/javascript')
       sS.setAttribute('src', 'https://cdn.jsdelivr.net/npm/streamsaver@latest/StreamSaver.js')
       document.getElementsByTagName('head')[0].appendChild(sS)
+      // Append web-streams polyfill.
+      var sSPolyfill = document.createElement('script')
+      sSPolyfill.setAttribute('type', 'text/javascript')
+      sSPolyfill.setAttribute('src', 'https://cdn.rawgit.com/creatorrr/web-streams-polyfill/68f93d7240d925d27b175ce39133f57993c3f109/dist/polyfill.min.js')
+      sSPolyfill.setAttribute('integrity', 'sha384-wC6EeO3kVv23JQA/XjoEHMvxOwXZXIRdxvhOt8rOcoGPYQnPbumUJugHHoJAdM0x')
+      sSPolyfill.setAttribute('crossorigin', 'anonymous')
+      document.getElementsByTagName('head')[0].appendChild(sSPolyfill)
     }
   </script>
 </body>
