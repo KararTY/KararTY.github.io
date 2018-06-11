@@ -246,7 +246,7 @@ function loadChannel (m = new MouseEvent()) {
 
     document.getElementById('pagination').classList.remove('is-hidden')
     hyper.bind(document.getElementById('pagination'))`
-      ${paginationRender({id: c, c: cacheChannels[loading][f][c].f, max: cacheFiles[loading].fi[c].length - 1})}
+      ${paginationRender({id: c, c: cacheChannels[loading][f][c].f, max: cacheFiles[loading].fi[c].length})}
     `
   })
   fReader.addEventListener('progress', renderProgressModal)
