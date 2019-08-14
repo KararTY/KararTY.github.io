@@ -573,9 +573,3 @@ window.addEventListener('load', (window) => {
     tbody.appendChild(tr)
   }
 })
-
-/* JonTron is awesome.
-PewDiePie is also awesome.
-If you have feedback, send them to (alremahykarar@ymail.com) */
-
-// Include list.js for search / filter function (?)
