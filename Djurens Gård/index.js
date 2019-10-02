@@ -67,7 +67,8 @@ class Game {
           })
         },
         energy: new Statistic(1, 1),
-        day: 1
+        day: 1,
+        deaths: 0
       }
     }
 
@@ -79,43 +80,14 @@ class Game {
   }
 
   failStates () {
-    let htmlContent
-    if (this.save.stats.ideologi.value < -99) {
-      // Fail state.
-      htmlContent = html`
-        <h1 class="title is-1">Game over.</h1>
-        <h2 class="subtitle is-2">Du har blivit jagad bort från gården.</h2>
-        <h4 class="subtitle is-4">Du överlevde ${this.save.day} dagar.</h4>
-      `
-    } else if (this.save.stats.ideologi.value > 99) {
-      // Fail state.
-      htmlContent = html`
-        <h1 class="title is-1">Game over.</h1>
-        <h2 class="subtitle is-2">Grattis, kamrat Napoleon.</h2>
-        <h4 class="subtitle is-4">Du överlevde ${this.save.day} dagar.</h4>
-      `
-    } else if (this.save.stats.tillit.value < 1) {
-      // Fail state.
-      htmlContent = html`
-        <h1 class="title is-1">Game over.</h1>
-        <h2 class="subtitle is-2">Du har blivit lönnmördad.</h2>
-        <h4 class="subtitle is-4">Du överlevde ${this.save.day} dagar.</h4>
-      `
-    } else if (this.save.stats.tillit.value > 99) {
-      htmlContent = html`
-        <h1 class="title is-1">Game over.</h1>
-        <h2 class="subtitle is-2">Du behövs inte längre.</h2>
-        <h4 class="subtitle is-4">Du överlevde ${this.save.day} dagar.</h4>
-      `
-    } else if (this.save.stats.befolkning.value < 1) {
-      htmlContent = html`
-        <h1 class="title is-1">Game over.</h1>
-        <h2 class="subtitle is-2">Du är ensam.</h2>
-        <h4 class="subtitle is-4">Du överlevde ${this.save.day} dagar.</h4>
-      `
-    }
+    let text
+    if (this.save.stats.ideologi.value < -99) text = 'Du har blivit jagad bort från gården.'
+    else if (this.save.stats.ideologi.value > 99) text = 'Grattis, kamrat Napoleon.'
+    else if (this.save.stats.tillit.value < 1) text = 'Du har blivit lönnmördad.'
+    else if (this.save.stats.tillit.value > 99) text = 'Du behövs inte längre.'
+    else if (this.save.stats.befolkning.value < 1) text = 'Du är ensam.'
 
-    if (htmlContent) {
+    if (text) {
       this.mapEl.innerHTML = ''
       document.getElementById('song')
       document.getElementById('songfile').src = 'song2.mp3'
@@ -123,13 +95,21 @@ class Game {
       document.getElementById('state').classList.remove('columns')
       document.getElementById('state').classList.remove('is-mobile')
       document.getElementById('state').classList.add('has-text-centered')
+
+      const htmlContent = html`
+        <h1 class="title is-1">Game over.</h1>
+        <h2 class="subtitle is-2">${text}</h2>
+        <h4 class="subtitle is-4">Du överlevde ${this.save.day} dagar.</h4>
+        ${this.save.deaths > 0 ? html`<h4 class="subtitle is-4">${this.save.deaths} dog.</h4>` : undefined}
+      `
+
       render(document.getElementById('state'), () => htmlContent)
       setInterval(() => {
         document.getElementById('state').style.marginTop = document.getElementById('state').style.marginTop === '-10px' ? '20px' : '-10px'
       }, 1000)
     }
 
-    return !!htmlContent
+    return !!text
   }
 
   update () {
@@ -358,7 +338,10 @@ class Game {
       // Population decimator.
       if (this.save.stats.befolkning.value > this.save.stats.pengar.value) {
         const death = Math.random()
-        if (death < 0.5) this.save.stats.befolkning.value--
+        if (death < 0.5) {
+          this.save.stats.befolkning.value--
+          this.save.deaths += 1
+        }
       }
 
       if (this.save.energy.value === 0) {
