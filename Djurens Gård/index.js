@@ -296,6 +296,7 @@ class Game {
             building.upgradeCosts[upgrades[i]]++
             building.upgradeCosts[upgrades[i]] = parseInt(building.multiplier * building.upgradeCosts[upgrades[i]])
           }
+
           if (name === 'lada' && building.addition > 1) {
             building.upgradeCosts = undefined
             this.save.buildings.grisstia = new Building({
@@ -311,7 +312,9 @@ class Game {
             })
           } else if (name === 'grisstia') {
             this.save.energy.max++
+            building.upgradeCosts[upgrades[i]] = parseInt(building.multiplier * building.upgradeCosts[upgrades[i]])
           }
+
           this.update()
           const htmlContent = this.menuBuilder(name)
           render(this.actionsEl, () => htmlContent)
@@ -369,6 +372,8 @@ class Game {
           this.save.stats.befolkning.value++
         }
 
+        if (this.save.stats.ideologi.value > 0 && !document.getElementById('name').innerText.startsWith('H')) render(document.getElementById('name'), () => html`Herrgården`)
+        if (this.save.stats.ideologi.value < 0 && !document.getElementById('name').innerText.startsWith('D')) render(document.getElementById('name'), () => html`Djurens gård`)
         render(document.getElementById('day'), () => html`Dag ${this.save.day}`)
         const htmlContent = html`<h3>${el.srcElement.innerText.toUpperCase()}...</h3><br><h4>Det är nu dag ${this.save.day}.</h4>`
         if (['entertain', 'propagate'].includes(type)) render(this.actionsEl, () => htmlContent)
