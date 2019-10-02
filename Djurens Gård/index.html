@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Djurens gård: ett spel</title>
+  <script src="lighterhtml.min.js"></script>
+  <link rel="stylesheet" href="bulma.min.css">
+  <style>
+    @font-face {
+      font-family: 'VT323';
+      src: url('VT323-Regular.ttf');
+    }
+    body {
+      font-family: 'VT323', monospace;
+    }
+    pre {
+      font-family: 'VT323', monospace;
+      line-height: normal;
+      letter-spacing: 0.3rem;
+      padding: 1rem 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="section">
+      <h1 class="title is-1 has-text-centered">Djurens gård: ett spel</h1>
+      <h3 class="subtitle is-3 has-text-centered" id="day">Dag 1</h3>
+      <div class="has-text-centered">
+        <audio id="song">
+          <source src="song.mp3" type="audio/mpeg">
+        </audio>
+        <h5 class="title is-5">Av Karar Al-Remahy, låten skapad av @dukope på twitter.</h5>
+      </div>
+      <nav class="columns" id="stats">
+        <p>Statistik</p>
+      </nav>
+      <div class="columns is-mobile" id="state">
+        <div class="column is-6" id="map">
+          <pre>Kartan</pre>
+        </div>
+        <div class="column is-6 content" id="actions"></div>
+      </div>
+    </section>
+  </div>
+</body>
+<script src="buildings.js"></script>
+<script src="index.js"></script>
+</html>
