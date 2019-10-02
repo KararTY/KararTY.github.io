@@ -1,3 +1,5 @@
+'use strict';
+
 const { html, render } = window.lighterhtml
 
 function arrayMax(arr) {
@@ -7,17 +9,17 @@ function arrayMax(arr) {
       max = arr[len]
     }
   }
-  return max;
+  return max
 }
 
 function arrayMin(arr) {
-  var len = arr.length, min = Infinity;
+  var len = arr.length, min = Infinity
   while (len--) {
     if (arr[len] < min) {
       min = arr[len]
     }
   }
-  return min;
+  return min
 }
 
 
@@ -120,7 +122,10 @@ class Game {
         <h3>Välkommen till djurens gård.</h3>
         <br>
         <h4>
-          <a onclick="${(e) => { this.update.bind(this)(e);song() }}">[Påbörja]</a>
+          <a onclick="${() => {
+            this.update.bind(this)()
+            song()
+          }}">[Påbörja]</a>
         </h4>
       `
     render(this.actionsEl, () => htmlContent)
