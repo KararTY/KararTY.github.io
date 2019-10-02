@@ -280,6 +280,7 @@ class Game {
 
             building.upgradeCosts[upgrades[i]]++
             building.upgradeCosts[upgrades[i]] = parseInt(building.multiplier * building.upgradeCosts[upgrades[i]])
+            if (name === 'grisstia') building.upgradeCosts[upgrades[i]] = parseInt(building.multiplier * building.upgradeCosts[upgrades[i]])
           }
 
           if (name === 'lada' && building.addition > 1) {
@@ -297,7 +298,6 @@ class Game {
             })
           } else if (name === 'grisstia') {
             this.save.energy.max++
-            building.upgradeCosts[upgrades[i]] = parseInt(building.multiplier * building.upgradeCosts[upgrades[i]])
           }
 
           this.update()
