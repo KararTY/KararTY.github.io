@@ -44,7 +44,7 @@ class Statistic {
 }
 
 class Game {
-  constructor ({ save, mapEl, actionsEl, statsEl }) {
+  constructor ({ save, mapEl, actionsEl, statsEl, newPlaythrough }) {
     if (!save) {
       save = {
         stats: {
@@ -75,56 +75,77 @@ class Game {
     this.mapEl = mapEl
     this.actionsEl = actionsEl
     this.statsEl = statsEl
+    this.newPlaythrough = newPlaythrough
   }
 
   failStates () {
-    if (this.save.stats.ideologi.value < -98) {
+    let htmlContent
+    if (this.save.stats.ideologi.value < -99) {
       // Fail state.
-      this.mapEl.innerHTML = ''
-      const htmlContent = html`
+      htmlContent = html`
         <h1 class="title is-1">Game over.</h1>
         <h2 class="subtitle is-2">Du har blivit jagad bort från gården.</h2>
         <h4 class="subtitle is-4">Du överlevde ${this.save.day} dagar.</h4>
       `
-      document.getElementById('state').classList.remove('columns')
-      document.getElementById('state').classList.remove('is-mobile')
-      document.getElementById('state').classList.add('has-text-centered')
-      render(document.getElementById('state'), () => htmlContent)
-      return true
-    } else if (this.save.stats.ideologi.value > 98) {
+    } else if (this.save.stats.ideologi.value > 99) {
       // Fail state.
-      this.mapEl.innerHTML = ''
-      const htmlContent = html`
+      htmlContent = html`
         <h1 class="title is-1">Game over.</h1>
         <h2 class="subtitle is-2">Grattis, kamrat Napoleon.</h2>
         <h4 class="subtitle is-4">Du överlevde ${this.save.day} dagar.</h4>
       `
-      document.getElementById('state').classList.remove('columns')
-      document.getElementById('state').classList.remove('is-mobile')
-      document.getElementById('state').classList.add('has-text-centered')
-      render(document.getElementById('state'), () => htmlContent)
-      return true
-    } else if (this.save.stats.tillit.value <= 1) {
+    } else if (this.save.stats.tillit.value < 1) {
       // Fail state.
-      this.mapEl.innerHTML = ''
-      const htmlContent = html`
+      htmlContent = html`
         <h1 class="title is-1">Game over.</h1>
         <h2 class="subtitle is-2">Du har blivit lönnmördad.</h2>
         <h4 class="subtitle is-4">Du överlevde ${this.save.day} dagar.</h4>
       `
+    } else if (this.save.stats.tillit.value > 99) {
+      htmlContent = html`
+        <h1 class="title is-1">Game over.</h1>
+        <h2 class="subtitle is-2">Du behövs inte längre.</h2>
+        <h4 class="subtitle is-4">Du överlevde ${this.save.day} dagar.</h4>
+      `
+    } else if (this.save.stats.befolkning.value < 1) {
+      htmlContent = html`
+        <h1 class="title is-1">Game over.</h1>
+        <h2 class="subtitle is-2">Du är ensam.</h2>
+        <h4 class="subtitle is-4">Du överlevde ${this.save.day} dagar.</h4>
+      `
+    }
+
+    if (htmlContent) {
+      this.mapEl.innerHTML = ''
+      document.getElementById('song')
+      document.getElementById('songfile').src = 'song2.mp3'
+      song()
       document.getElementById('state').classList.remove('columns')
       document.getElementById('state').classList.remove('is-mobile')
       document.getElementById('state').classList.add('has-text-centered')
       render(document.getElementById('state'), () => htmlContent)
-      return true
+      setInterval(() => {
+        document.getElementById('state').style.marginTop = document.getElementById('state').style.marginTop === '-10px' ? '20px' : '-10px'
+      }, 1000)
     }
-    return false
+
+    return !!htmlContent
   }
 
   update () {
-    if (!this.failStates()) {
+    this.statsBuilder()
+    if (this.newPlaythrough) {
+      this.newPlaythrough = false
+      const htmlContent = html`
+        <h3>Välkommen till djurens gård.</h3>
+        <br>
+        <h4>
+          <a onclick="${(e) => { this.update.bind(this)(e);song() }}">[Påbörja]</a>
+        </h4>
+      `
+    render(this.actionsEl, () => htmlContent)
+    } else if (!this.failStates()) {
       this.farmBuilder()
-      this.statsBuilder()
       this.mainActions()
     }
   }
@@ -209,21 +230,21 @@ class Game {
         result = html`
           <h3>${texts.name}</h3>
           ${this.save.buildings[name].improvementCosts ? html`
-            <p>
-              <a onclick="${(el) => this.action.bind(this)(el)}" data-type="förbättra" data-name="${name}">[Förbättra]</a> (Effektiviserar arbete)
-              <br><span>Kostar: ${Object.entries(this.save.buildings[name].improvementCosts).map(cost => `x${cost[1]} ${cost[0].toUpperCase()}`).join(', ')}</span>
+              <h4 class="is-marginless">
+                <a onclick="${(el) => this.action.bind(this)(el)}" data-type="förbättra" data-name="${name}">[Förbättra]</a> <span>(Effektiviserar arbete)</span>
+              </h4>
+              <h4>Kostar: ${Object.entries(this.save.buildings[name].improvementCosts).map(cost => `x${cost[1]} ${cost[0].toUpperCase()}`).join(', ')}<h4>
             </p>
           ` : undefined}
           ${this.save.buildings[name].upgradeCosts ? html`
-            <p>
-              <a onclick="${(el) => this.action.bind(this)(el)}" data-type="uppgradera" data-name="${name}">[Uppgradera]</a> (Låser upp nya arbeten)
-              <br><span>Kostar: ${Object.entries(this.save.buildings[name].upgradeCosts).map(cost => `x${cost[1]} ${cost[0].toUpperCase()}`).join(', ')}</span>
-            </p>
+            <h4 class="is-marginless">
+              <a onclick="${(el) => this.action.bind(this)(el)}" data-type="uppgradera" data-name="${name}">[Uppgradera]</a> <span>(${name === 'grisstia' ? 'Utför mer för varje dag' : 'Låser upp nya arbeten'})</span>
+            </h4>
+            <h4>Kostar: ${Object.entries(this.save.buildings[name].upgradeCosts).map(cost => `x${cost[1]} ${cost[0].toUpperCase()}`).join(', ')}</h4>
           ` : undefined}
-          <br>
-          <p>
+          <h4>
             <a onclick="${(el) => this.action.bind(this)(el)}" data-type="stäng">[Stäng]</a>
-          </p>
+          </h4>
         `
         break
       default:
@@ -310,7 +331,8 @@ class Game {
       case 'entertain':
         if (this.save.energy.value > 0) {
           // Money breakers.
-          this.save.stats.pengar.value -= parseInt(this.save.buildings.lada.addition * 0.25)
+          const price = parseInt(this.save.buildings.lada.addition * 0.25)
+          this.save.stats.pengar.value -= price || 1
           // Trust maker.
           this.save.stats.tillit.value++
         }
@@ -330,6 +352,12 @@ class Game {
     if (['work', 'entertain', 'propagate'].includes(type)) {
       this.save.energy.value--
 
+      // Population decimator.
+      if (this.save.stats.befolkning.value > this.save.stats.pengar.value) {
+        const death = Math.random()
+        if (death < 0.5) this.save.stats.befolkning.value--
+      }
+
       if (this.save.energy.value === 0) {
         this.save.energy.value = this.save.energy.max
 
@@ -345,7 +373,7 @@ class Game {
         const htmlContent = html`<h3>${el.srcElement.innerText.toUpperCase()}...</h3><br><h4>Det är nu dag ${this.save.day}.</h4>`
         if (['entertain', 'propagate'].includes(type)) render(this.actionsEl, () => htmlContent)
         setTimeout(() => this.update(), type === 'entertain' ? 1000 : type === 'propagate' ? 500 : 0)
-      }
+      } else this.update()
     }
   }
 
@@ -389,24 +417,22 @@ class Game {
   game = new Game({
     mapEl: document.getElementById('map'),
     actionsEl: document.getElementById('actions'),
-    statsEl: document.getElementById('stats')
+    statsEl: document.getElementById('stats'),
+    newPlaythrough: true
   })
 
   game.update()
+})()
 
+function song () {
   const song = document.getElementById('song')
+  if (!song.hasAttribute('volume')) {
+    song.volume = 0.3
+    song.setAttribute('volume', 0.3)
+  }
   song.autoplay = true
   song.loop = true
   song.controls = true
-
-  function playSong() {
-    console.log('playsong')
-    song.volume = 0.3
-    song.play()
-    document.body.removeEventListener('click', playSong)
-  }
-
-  song.addEventListener('canplay', () => {
-    document.body.addEventListener('click', playSong)
-  })
-})()
+  song.load()
+  song.play()
+}
